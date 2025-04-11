@@ -56,7 +56,7 @@ async def search_recipes(
     # If no search criteria provided, return empty list
     if not any([name, ingredient, include_ingredients]):
         return []
-        
+
     if name:
         recipes.extend(api_service.search_recipes_by_name(name))
     if ingredient:
@@ -75,29 +75,37 @@ async def search_recipes(
         parts = ingredient_str.split()
         # Find the first word that doesn't look like a measurement or unit
         for i, part in enumerate(parts):
-            if not any(c.isdigit() for c in part) and part.lower() not in ['g', 'ml', 'tbsp', 'tsp', 'tbls', 'to', 'serve']:
-                return ' '.join(parts[i:])
+            if not any(c.isdigit() for c in part) and part.lower() not in [
+                "g",
+                "ml",
+                "tbsp",
+                "tsp",
+                "tbls",
+                "to",
+                "serve",
+            ]:
+                return " ".join(parts[i:])
         return ingredient_str
 
     # Filter recipes based on include/exclude ingredients
     if include_ingredients:
         include_list = [i.strip().lower() for i in include_ingredients.split(",")]
         recipes = [
-            r for r in recipes 
+            r
+            for r in recipes
             if any(
-                any(include_ing in extract_ingredient_name(ing).lower() 
-                    for ing in r.ingredients)
+                any(include_ing in extract_ingredient_name(ing).lower() for ing in r.ingredients)
                 for include_ing in include_list
             )
         ]
-    
+
     if exclude_ingredients:
         exclude_list = [i.strip().lower() for i in exclude_ingredients.split(",")]
         recipes = [
-            r for r in recipes 
+            r
+            for r in recipes
             if not any(
-                any(exclude_ing in extract_ingredient_name(ing).lower() 
-                    for ing in r.ingredients)
+                any(exclude_ing in extract_ingredient_name(ing).lower() for ing in r.ingredients)
                 for exclude_ing in exclude_list
             )
         ]
