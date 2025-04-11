@@ -55,10 +55,19 @@ def get_random_recipe() -> dict | None:
         return None
 
 
-def search_recipes(query: str) -> list[dict]:
-    """Search recipes by name or ingredient"""
+def search_recipes(query: str, include_ingredients: str | None = None, exclude_ingredients: str | None = None) -> list[dict]:
+    """Search recipes by name or ingredient with optional ingredient filtering"""
     try:
-        response = get_client().get(f"/recipes/search?name={query}&ingredient={query}")
+        params = {
+            "name": query,
+            "ingredient": query,
+            "include_ingredients": include_ingredients,
+            "exclude_ingredients": exclude_ingredients,
+        }
+        # Remove None values from params
+        params = {k: v for k, v in params.items() if v is not None}
+        
+        response = get_client().get("/recipes/search", params=params)
         response.raise_for_status()
         return response.json()
     except httpx.HTTPError as e:
@@ -244,14 +253,33 @@ def main():
 
     elif page == "Search Recipes":
         st.header("Search Recipes")
-        search_query = st.text_input("Search by name or ingredient")
-        if search_query:
-            recipes = search_recipes(search_query)
+        st.info("You can search by recipe name, ingredient, or filter by ingredients only")
+        search_query = st.text_input(
+            "Search by name or ingredient (optional)",
+            help="Leave empty to search by ingredients only"
+        )
+        
+        # Add ingredient filtering controls
+        col1, col2 = st.columns(2)
+        with col1:
+            include_ingredients = st.text_input(
+                "Include ingredients (comma-separated)",
+                help="Show recipes that contain ANY of these ingredients (measurements like '100g' or '2 cups' are ignored)"
+            )
+        with col2:
+            exclude_ingredients = st.text_input(
+                "Exclude ingredients (comma-separated)",
+                help="Hide recipes that contain ANY of these ingredients (measurements like '100g' or '2 cups' are ignored)"
+            )
+        
+        # Search when either search_query or include_ingredients is provided
+        if search_query or include_ingredients:
+            recipes = search_recipes(search_query, include_ingredients, exclude_ingredients)
             if recipes:
                 for recipe in recipes:
                     display_recipe(recipe)
             else:
-                st.info("No recipes found matching your search.")
+                st.info("No recipes found matching your search criteria.")
 
     elif page == "Favorites":
         st.header("Favorite Recipes")

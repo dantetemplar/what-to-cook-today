@@ -46,12 +46,61 @@ async def get_random_recipe() -> RecipeResponse:
 
 
 @app.get("/recipes/search", response_model=list[RecipeResponse])
-async def search_recipes(name: str | None = None, ingredient: str | None = None) -> list[RecipeResponse]:
+async def search_recipes(
+    name: str | None = None,
+    ingredient: str | None = None,
+    include_ingredients: str | None = None,
+    exclude_ingredients: str | None = None,
+) -> list[RecipeResponse]:
     recipes = []
+    # If no search criteria provided, return empty list
+    if not any([name, ingredient, include_ingredients]):
+        return []
+        
     if name:
         recipes.extend(api_service.search_recipes_by_name(name))
     if ingredient:
         recipes.extend(api_service.search_recipes_by_ingredient(ingredient))
+    # If only include_ingredients is provided, get recipes from both sources
+    elif include_ingredients:
+        # Get recipes from database
+        recipes.extend(db.get_all_recipes())
+        # Get recipes from API for each included ingredient
+        for ing in include_ingredients.split(","):
+            recipes.extend(api_service.search_recipes_by_ingredient(ing.strip()))
+
+    def extract_ingredient_name(ingredient_str: str) -> str:
+        # Remove measurements and units (e.g., "100g Flour" -> "Flour")
+        # Split by space and take the last word(s) that form the ingredient name
+        parts = ingredient_str.split()
+        # Find the first word that doesn't look like a measurement or unit
+        for i, part in enumerate(parts):
+            if not any(c.isdigit() for c in part) and part.lower() not in ['g', 'ml', 'tbsp', 'tsp', 'tbls', 'to', 'serve']:
+                return ' '.join(parts[i:])
+        return ingredient_str
+
+    # Filter recipes based on include/exclude ingredients
+    if include_ingredients:
+        include_list = [i.strip().lower() for i in include_ingredients.split(",")]
+        recipes = [
+            r for r in recipes 
+            if any(
+                any(include_ing in extract_ingredient_name(ing).lower() 
+                    for ing in r.ingredients)
+                for include_ing in include_list
+            )
+        ]
+    
+    if exclude_ingredients:
+        exclude_list = [i.strip().lower() for i in exclude_ingredients.split(",")]
+        recipes = [
+            r for r in recipes 
+            if not any(
+                any(exclude_ing in extract_ingredient_name(ing).lower() 
+                    for ing in r.ingredients)
+                for exclude_ing in exclude_list
+            )
+        ]
 
     # Save recipes to database
     for recipe in recipes:
