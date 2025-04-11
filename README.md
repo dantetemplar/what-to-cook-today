@@ -138,7 +138,7 @@ Performance metrics:
 Security testing is performed using Bandit. To run security checks:
 
 ```bash
-uv run bandit -r src
+uv run bandit -r src --exclude src/ui/.venv
 ```
 
 ### Fuzzing Tests
