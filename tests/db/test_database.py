@@ -92,7 +92,7 @@ def test_get_favorite_recipes(temp_db, sample_recipe):
 
     temp_db.add_recipe(sample_recipe)
     temp_db.add_recipe(favorite_recipe)
-    
+
     # Add favorite for test_user
     temp_db.toggle_favorite("456", "test_user")
 
@@ -123,18 +123,18 @@ def test_get_custom_recipes(temp_db, sample_recipe):
 def test_get_favorite_recipes_with_user_id(temp_db, sample_recipe):
     # Add a recipe
     temp_db.add_recipe(sample_recipe)
-    
+
     # Add favorite for user1
     assert temp_db.toggle_favorite(sample_recipe.id, "user1")
-    
+
     # Add favorite for user2
     assert temp_db.toggle_favorite(sample_recipe.id, "user2")
-    
+
     # Get favorites for user1
     favorites_user1 = temp_db.get_favorite_recipes("user1")
     assert len(favorites_user1) == 1
     assert favorites_user1[0].id == sample_recipe.id
-    
+
     # Get favorites for user2
     favorites_user2 = temp_db.get_favorite_recipes("user2")
     assert len(favorites_user2) == 1
@@ -144,21 +144,21 @@ def test_get_favorite_recipes_with_user_id(temp_db, sample_recipe):
 def test_toggle_favorite_with_user_id(temp_db, sample_recipe):
     # Add a recipe
     temp_db.add_recipe(sample_recipe)
-    
+
     # Toggle favorite for user1
     assert temp_db.toggle_favorite(sample_recipe.id, "user1")
-    
+
     # Verify it's favorited for user1
     favorites_user1 = temp_db.get_favorite_recipes("user1")
     assert len(favorites_user1) == 1
-    
+
     # Verify it's not favorited for user2
     favorites_user2 = temp_db.get_favorite_recipes("user2")
     assert len(favorites_user2) == 0
-    
+
     # Toggle back for user1
     assert temp_db.toggle_favorite(sample_recipe.id, "user1")
-    
+
     # Verify it's no longer favorited for user1
     favorites_user1 = temp_db.get_favorite_recipes("user1")
     assert len(favorites_user1) == 0

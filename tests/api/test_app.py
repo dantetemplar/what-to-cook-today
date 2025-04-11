@@ -125,7 +125,7 @@ def test_add_custom_recipe(client):
         "is_custom": True,
     }
 
-    with patch("src.api.app.db.add_recipe") as mock_add:
+    with patch("src.api.app.db.add_recipe"):
         response = client.post("/recipes/custom", json=custom_recipe)
         assert response.status_code == 200
         data = response.json()

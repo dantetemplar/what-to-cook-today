@@ -1,4 +1,5 @@
-from locust import HttpUser, task, between
+from locust import HttpUser, between, task
+
 
 class RecipeUser(HttpUser):
     wait_time = between(1, 3)  # Wait between 1 and 3 seconds between tasks
@@ -35,5 +36,5 @@ class RecipeUser(HttpUser):
                 "ingredients": ["ingredient1", "ingredient2"],
                 "is_favorite": False,
                 "is_custom": True,
-            }
-        ) 
+            },
+        )
