@@ -1,0 +1,10 @@
+[project]
+name = "what-to-cook-today-ui"
+version = "0.1.0"
+description = "Streamlit UI for What to Cook Today recipe application"
+dependencies = [
+    "httpx>=0.28.1",
+    "streamlit>=1.44.1",
+    "streamlit-cookies-controller>=0.0.4",
+]
+requires-python = ">=3.12"
