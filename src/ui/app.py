@@ -229,12 +229,33 @@ def display_recipe(recipe: dict):
                 if st.button(button_text, key=f"fav_{recipe_id}"):
                     handle_favorite_click(recipe_id, current_favorite, recipe)
 
+def get_random_recipe_from_favorites():
+    user_id = get_user_id()
+    try:
+        response = get_client().get(f"/recipes/random_from_favorites?user_id={user_id}")
+        response.raise_for_status()
+        return response.json()
+    except httpx.HTTPError as e:
+        st.error(f"Failed to fetch a random recipe from favorites: {str(e)}")
+        return None
+
+
+def get_random_recipe_from_custom():
+    user_id = get_user_id()
+    try:
+        response = get_client().get(f"/recipes/random_from_custom?user_id={user_id}")
+        response.raise_for_status()
+        return response.json()
+    except httpx.HTTPError as e:
+        st.error(f"Failed to fetch a random recipe from custom recipes: {str(e)}")
+        return None
+
 
 def main():
     st.title("🍳 What to Cook Today")
 
     # Sidebar navigation
-    page = st.sidebar.radio("Navigation", ["Home", "Search Recipes", "Favorites", "Add Custom Recipe"])
+    page = st.sidebar.radio("Navigation", ["Home", "Search Recipes", "Custom Recipes", "Add Custom Recipe", "Random from Favorites", "Random from Custom", "Favorites"])
 
     if page == "Home":
         st.header("Random Recipe Suggestion")
@@ -302,15 +323,67 @@ def main():
             submitted = st.form_submit_button("Add Recipe")
             if submitted:
                 recipe = {
+                    "id": str(uuid.uuid4()),
                     "name": name,
                     "ingredients": [i.strip() for i in ingredients.split("\n") if i.strip()],
-                    "instructions": [i.strip() for i in instructions.split("\n") if i.strip()],
+                    "instructions": "\n".join([i.strip() for i in instructions.split("\n") if i.strip()]),
                     "image_url": image_url if image_url else None,
+                    "is_favorite": False,
+                    "is_custom": True
                 }
                 if add_custom_recipe(recipe):
                     st.success("Recipe added successfully!")
                 else:
                     st.error("Failed to add recipe.")
+
+    elif page == "Random from Favorites":
+        st.header("Random Recipe from Favorites")
+
+        if "random_favorite_recipe" not in st.session_state:
+            st.session_state.random_favorite_recipe = None
+
+        if st.button("Get Random Recipe from Favorites"):
+            recipe = get_random_recipe_from_favorites()
+            if recipe:
+                st.session_state.random_favorite_recipe = recipe
+            else:
+                st.warning("The favorites list is empty.")
+
+        if st.session_state.random_favorite_recipe:
+            display_recipe(st.session_state.random_favorite_recipe)
+
+    elif page == "Random from Custom":
+        st.header("Random Recipe from Custom Recipes")
+
+        if "random_custom_recipe" not in st.session_state:
+            st.session_state.random_custom_recipe = None
+
+        if st.button("Get Random Recipe from Custom"):
+            recipe = get_random_recipe_from_custom()
+            if recipe:
+                st.session_state.random_custom_recipe = recipe
+            else:
+                st.warning("The favorites list is empty.")
+
+        if st.session_state.random_custom_recipe:
+            display_recipe(st.session_state.random_custom_recipe)
+
+    elif page == "Custom Recipes":
+        st.header("Custom Recipes")
+
+        try:
+            response = get_client().get("/recipes/custom")
+            response.raise_for_status()
+            custom_recipes = response.json()
+
+            if custom_recipes:
+                for recipe in custom_recipes:
+                    display_recipe(recipe)
+            else:
+                st.info("No custom recipes found.")
+
+        except httpx.HTTPError as e:
+            st.error(f"Error fetching custom recipes: {str(e)}")
 
 
 if __name__ == "__main__":

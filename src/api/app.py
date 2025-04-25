@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import random
+from typing import Optional
 
 from ..db.database import Database
 from ..models.recipe import Recipe
@@ -25,7 +27,7 @@ db = Database()
 class RecipeResponse(BaseModel):
     id: str
     name: str
-    image_url: str
+    image_url: Optional[str]
     instructions: str
     ingredients: list[str]
     is_favorite: bool
@@ -145,7 +147,31 @@ async def add_custom_recipe(recipe: RecipeResponse) -> RecipeResponse:
         image_url=recipe.image_url,
         instructions=recipe.instructions,
         ingredients=recipe.ingredients,
-        is_custom=True,
+        is_custom=recipe.is_custom,
     )
     db.add_recipe(custom_recipe)
     return RecipeResponse(**custom_recipe.to_dict())
+
+
+# A random recipe from the list of favorites 
+@app.get("/recipes/random_from_favorites")
+def get_random_favorite_recipe(user_id: str):
+
+    favorite_recipes = db.get_favorite_recipes(user_id)
+    if not favorite_recipes:
+        return {"error": "No favorite recipes found."}
+
+    random_recipe = random.choice(favorite_recipes)
+    return random_recipe
+
+
+# Random recipe from the custom list 
+@app.get("/recipes/random_from_custom")
+def get_random_custom_recipe(user_id: str):
+
+    custom_recipes = db.get_custom_recipes(user_id)
+    if not custom_recipes:
+        return {"error": "No custom recipes found."}
+
+    random_recipe = random.choice(custom_recipes)
+    return random_recipe

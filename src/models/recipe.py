@@ -1,11 +1,12 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
 class Recipe:
     id: str
     name: str
-    image_url: str
+    image_url: Optional[str]
     instructions: str
     ingredients: list[str]
     is_favorite: bool = False

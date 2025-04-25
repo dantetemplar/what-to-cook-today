@@ -17,7 +17,7 @@ class Database:
                 CREATE TABLE IF NOT EXISTS recipes (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
-                    image_url TEXT NOT NULL,
+                    image_url TEXT,
                     instructions TEXT NOT NULL,
                     ingredients TEXT NOT NULL,
                     is_custom INTEGER DEFAULT 0
@@ -116,10 +116,21 @@ class Database:
                 for row in cursor.fetchall()
             ]
 
-    def get_custom_recipes(self) -> list[Recipe]:
+    def get_custom_recipes(self, user_id: str = None) -> list[Recipe]:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM recipes WHERE is_custom = 1")
+            if user_id:
+                cursor.execute(
+                    """
+                    SELECT r.*
+                    FROM recipes r
+                    LEFT JOIN favorites f ON r.id = f.recipe_id
+                    WHERE r.is_custom = 1 AND (f.user_id = ? OR f.user_id IS NULL)
+                    """,
+                    (user_id,)
+                )
+            else:
+                cursor.execute("SELECT * FROM recipes WHERE is_custom = 1")
             return [
                 Recipe(
                     id=row[0],
