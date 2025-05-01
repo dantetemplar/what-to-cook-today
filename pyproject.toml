@@ -23,6 +23,9 @@ dependencies = [
     "selenium>=4.31.0",
     "sqlalchemy>=2.0.40",
     "uvicorn>=0.34.0",
+    "fpdf>=1.7.2",
+    "streamlit>=1.45.0",
+    "streamlit-cookies-controller>=0.0.4",
 ]
 
 [tool.ruff]

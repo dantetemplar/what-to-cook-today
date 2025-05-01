@@ -6,5 +6,7 @@ dependencies = [
     "httpx>=0.28.1",
     "streamlit>=1.44.1",
     "streamlit-cookies-controller>=0.0.4",
+    "fpdf>=1.7.2",
+    "pdfkit>=1.0.0",
 ]
 requires-python = ">=3.12"

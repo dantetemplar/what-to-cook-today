@@ -3,6 +3,7 @@ import uuid
 
 import httpx
 import streamlit as st
+from fpdf import FPDF
 from streamlit_cookies_controller import CookieController, RemoveEmptyElementContainer
 
 # Set page config first
@@ -229,6 +230,70 @@ def display_recipe(recipe: dict):
                 if st.button(button_text, key=f"fav_{recipe_id}"):
                     handle_favorite_click(recipe_id, current_favorite, recipe)
 
+
+def generate_pdf(recipes: list[dict], title: str) -> bytes:
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Courier", size=12)
+
+    pdf.set_font("Courier", style="B", size=18) # Title font
+    pdf.cell(200, 10, txt=title, ln=True, align='C')
+    pdf.ln(10)
+
+    for recipe in recipes:
+        pdf.set_font("Courier", style="B", size=14)
+        pdf.cell(0, 10, txt=recipe.get("name", "Untitled Recipe"), ln=True, align='L')
+        pdf.ln(5)
+
+        image_url = recipe.get("image_url")
+        if image_url:
+            try:
+                response = httpx.get(image_url)
+                response.raise_for_status()
+                temp_image_path = f"temp_image_{recipe.get('id', 'unknown')}.jpg"
+
+                with open(temp_image_path, "wb") as img_file:
+                    img_file.write(response.content)
+
+                current_y = pdf.get_y()
+                pdf.image(temp_image_path, x=10, y=current_y, w=100)
+                pdf.set_y(current_y + 70) 
+                pdf.ln(30)
+
+            except Exception as e:
+                pdf.set_font("Arial", size=10)
+                pdf.cell(0, 10, txt=f"[Image could not be loaded: {str(e)}]", ln=True)
+                pdf.ln(5)
+
+        # ingredients section
+        pdf.set_font("Arial", style="B", size=12)
+        pdf.cell(0, 10, txt="Ingredients:", ln=True)
+        pdf.set_font("Arial", size=12)
+        for ingredient in recipe.get("ingredients", []):
+            pdf.cell(0, 10, txt=f"- {ingredient}", ln=True)
+        pdf.ln(5)
+
+        # instructions section
+        pdf.set_font("Arial", style="B", size=12)
+        pdf.cell(0, 10, txt="Instructions:", ln=True)
+        pdf.set_font("Arial", size=12)
+        instructions = recipe.get("instructions", [])
+        if isinstance(instructions, str):
+            instructions = [line.strip() for line in instructions.split("\n") if line.strip()]
+        for idx, instruction in enumerate(instructions, 1):
+            pdf.multi_cell(0, 10, txt=f"{idx}. {instruction}")
+        pdf.ln(10)
+
+        # separator between recipes
+        pdf.set_draw_color(200, 200, 200)
+        pdf.set_line_width(0.5)
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(10)
+
+    return pdf.output(dest='S').encode('latin1') # save pdf
+
+
 def get_random_recipe_from_favorites():
     user_id = get_user_id()
     try:
@@ -307,6 +372,14 @@ def main():
         st.header("Favorite Recipes")
         favorites = get_favorite_recipes()
         if favorites:
+            if st.button("I want to download the recipes"):
+                pdf_data = generate_pdf(favorites, "Favorite Recipes")
+                st.download_button(
+                    label="Download PDF",
+                    data=pdf_data,
+                    file_name="favorite_recipes.pdf",
+                    mime="application/pdf"
+                )
             for recipe in favorites:
                 display_recipe(recipe)
         else:
@@ -377,6 +450,14 @@ def main():
             custom_recipes = response.json()
 
             if custom_recipes:
+                if st.button("I want to download the recipes"):
+                    pdf_data = generate_pdf(custom_recipes, "Custom Recipes")
+                    st.download_button(
+                        label="Download PDF",
+                        data=pdf_data,
+                        file_name="custom_recipes.pdf",
+                        mime="application/pdf"
+                    )
                 for recipe in custom_recipes:
                     display_recipe(recipe)
             else:

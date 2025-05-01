@@ -142,3 +142,39 @@ def test_parse_meal_to_recipe(api_service):
     assert recipe.image_url == "http://example.com/image.jpg"
     assert recipe.instructions == "Test instructions"
     assert len(recipe.ingredients) == 2
+
+
+def test_search_recipes_by_name_success(api_service):
+    mock_response = {
+        "meals": [
+            {
+                "idMeal": "777",
+                "strMeal": "My super recipe",
+                "strMealThumb": "http://example.com/image.jpg",
+                "strInstructions": "Test instructions",
+                "strIngredient1": "Chicken",
+                "strMeasure1": "200g",
+                "strIngredient2": "Protein",
+                "strMeasure2": "1 tsp",
+                "strIngredient3": None,
+                "strMeasure3": None,
+            }
+        ]
+    }
+
+    with patch.object(api_service.session, "get") as mock_get:
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.json.return_value = mock_response
+
+        # Call the method
+        recipes = api_service.search_recipes_by_name("Test")
+
+        # Assertions
+        assert len(recipes) == 1
+        recipe = recipes[0]
+        assert isinstance(recipe, Recipe)
+        assert recipe.id == "777"
+        assert recipe.name == "My super recipe"
+        assert recipe.image_url == "http://example.com/image.jpg"
+        assert recipe.instructions == "Test instructions"
+        assert recipe.ingredients == ["200g Chicken", "1 tsp Protein"]
