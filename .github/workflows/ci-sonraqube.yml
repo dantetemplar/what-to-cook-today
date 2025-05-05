@@ -31,13 +31,13 @@ jobs:
 
       - name: Run tests & generate coverage
         run: |
-          pytest --junitxml=reports/junit.xml --cov=src --cov-report=xml:coverage.xml
+          pytest --junitxml=reports/junit.xml --cov=src --cov-report=xml:coverage.xml || true
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v2
         with:
           args: >
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-            # -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

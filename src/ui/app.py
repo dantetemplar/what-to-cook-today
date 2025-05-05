@@ -238,12 +238,12 @@ def generate_pdf(recipes: list[dict], title: str) -> bytes:
     pdf.set_font("Courier", size=12)
 
     pdf.set_font("Courier", style="B", size=18) # Title font
-    pdf.cell(200, 10, txt=title, ln=True, align='C')
+    pdf.cell(200, 10, txt=title, ln=True, align="C")
     pdf.ln(10)
 
     for recipe in recipes:
         pdf.set_font("Courier", style="B", size=14)
-        pdf.cell(0, 10, txt=recipe.get("name", "Untitled Recipe"), ln=True, align='L')
+        pdf.cell(0, 10, txt=recipe.get("name", "Untitled Recipe"), ln=True, align="L")
         pdf.ln(5)
 
         image_url = recipe.get("image_url")
@@ -291,7 +291,7 @@ def generate_pdf(recipes: list[dict], title: str) -> bytes:
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(10)
 
-    return pdf.output(dest='S').encode('latin1') # save pdf
+    return pdf.output(dest="S").encode("latin1") # save pdf
 
 
 def get_random_recipe_from_favorites():

@@ -1,7 +1,17 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import httpx
-from src.ui.app import generate_pdf, display_recipe, get_random_recipe_from_favorites, get_random_recipe_from_custom, refresh_favorites, get_favorite_recipes
+import pytest
+
+from src.ui.app import (
+    display_recipe,
+    generate_pdf,
+    get_favorite_recipes,
+    get_random_recipe_from_custom,
+    get_random_recipe_from_favorites,
+    refresh_favorites,
+)
+
 
 @pytest.fixture
 def mock_client():

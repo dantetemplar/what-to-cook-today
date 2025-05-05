@@ -1,8 +1,8 @@
+import random
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import random
-from typing import Optional
 
 from ..db.database import Database
 from ..models.recipe import Recipe
@@ -27,7 +27,7 @@ db = Database()
 class RecipeResponse(BaseModel):
     id: str
     name: str
-    image_url: Optional[str]
+    image_url: str | None
     instructions: str
     ingredients: list[str]
     is_favorite: bool
