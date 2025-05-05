@@ -1,32 +1,40 @@
-[project]
+[tool.poetry]
 name = "what-to-cook-today"
 version = "0.1.0"
-authors = [
-    { name = "Ruslan Belkov", email = "r.belkov@innopolis.university" },
-]
 description = "A recipe recommendation application"
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "bandit>=1.8.3",
-    "fastapi>=0.115.12",
-    "httpx>=0.28.1",
-    "hypothesis>=6.131.0",
-    "locust>=2.34.1",
-    "mutmut>=3.2.3",
-    "pydantic>=2.11.3",
-    "pylint>=3.3.6",
-    "pytest>=8.3.5",
-    "pytest-cov>=6.1.1",
-    "radon>=5.1.0",
-    "requests>=2.32.3",
-    "selenium>=4.31.0",
-    "sqlalchemy>=2.0.40",
-    "uvicorn>=0.34.0",
-    "fpdf>=1.7.2",
-    "streamlit>=1.45.0",
-    "streamlit-cookies-controller>=0.0.4",
-]
+authors = ["Ruslan Belkov <r.belkov@innopolis.university>"]
+license = "MIT"
+homepage = "https://github.com/dantetemplar/what-to-cook-today"
+repository = "https://github.com/dantetemplar/what-to-cook-today"
+documentation = "https://github.com/dantetemplar/what-to-cook-today/blob/main/README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0.0"
+fastapi = ">=0.115.12"
+httpx = ">=0.28.1"
+pydantic = ">=2.11.3"
+requests = ">=2.32.3"
+sqlalchemy = ">=2.0.40"
+uvicorn = ">=0.34.0"
+streamlit = ">=1.45.0"
+streamlit-cookies-controller = ">=0.0.4"
+fpdf = ">=1.7.2"
+
+[tool.poetry.dev-dependencies]
+bandit = ">=1.8.3"
+hypothesis = ">=6.131.0"
+locust = ">=2.34.1"
+mutmut = ">=3.2.3"
+pylint = ">=3.3.6"
+pytest = ">=8.3.5"
+pytest-cov = ">=6.1.1"
+radon = ">=5.1.0"
+selenium = ">=4.31.0"
+
+[build-system]
+requires = ["poetry-core>=1.5.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 target-version = "py312"
