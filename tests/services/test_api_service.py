@@ -178,3 +178,73 @@ def test_search_recipes_by_name_success(api_service):
         assert recipe.image_url == "http://example.com/image.jpg"
         assert recipe.instructions == "Test instructions"
         assert recipe.ingredients == ["200g Chicken", "1 tsp Protein"]
+
+
+def test_search_recipes_by_name_exception(api_service):
+    """Test that search_recipes_by_name returns an empty list when an exception occurs."""
+    # Simulate an exception during API call
+    with patch.object(api_service.session, "get", side_effect=Exception("API Error")):
+        # Call the method
+        recipes = api_service.search_recipes_by_name("Test")
+        
+        # Verify it gracefully returns an empty list on exception
+        assert isinstance(recipes, list)
+        assert len(recipes) == 0
+
+
+def test_search_recipes_by_ingredient_exception(api_service):
+    """Test that search_recipes_by_ingredient returns an empty list when an exception occurs."""
+    # Simulate an exception during API call
+    with patch.object(api_service.session, "get", side_effect=Exception("API Error")):
+        # Call the method
+        recipes = api_service.search_recipes_by_ingredient("Chicken")
+        
+        # Verify it gracefully returns an empty list on exception
+        assert isinstance(recipes, list)
+        assert len(recipes) == 0
+
+
+def test_search_recipes_by_name_non_200_status(api_service):
+    """Test that search_recipes_by_name returns an empty list when status code is not 200."""
+    mock_response = Mock()
+    mock_response.status_code = 404  # Not found status
+    
+    with patch.object(api_service.session, "get", return_value=mock_response):
+        recipes = api_service.search_recipes_by_name("Test")
+        assert isinstance(recipes, list)
+        assert len(recipes) == 0
+
+
+def test_search_recipes_by_name_null_meals(api_service):
+    """Test that search_recipes_by_name returns an empty list when meals is null."""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"meals": None}
+    
+    with patch.object(api_service.session, "get", return_value=mock_response):
+        recipes = api_service.search_recipes_by_name("Test")
+        assert isinstance(recipes, list)
+        assert len(recipes) == 0
+
+
+def test_search_recipes_by_ingredient_non_200_status(api_service):
+    """Test that search_recipes_by_ingredient returns an empty list when status code is not 200."""
+    mock_response = Mock()
+    mock_response.status_code = 404  # Not found status
+    
+    with patch.object(api_service.session, "get", return_value=mock_response):
+        recipes = api_service.search_recipes_by_ingredient("Chicken")
+        assert isinstance(recipes, list)
+        assert len(recipes) == 0
+
+
+def test_search_recipes_by_ingredient_null_meals(api_service):
+    """Test that search_recipes_by_ingredient returns an empty list when meals is null."""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"meals": None}
+    
+    with patch.object(api_service.session, "get", return_value=mock_response):
+        recipes = api_service.search_recipes_by_ingredient("Chicken")
+        assert isinstance(recipes, list)
+        assert len(recipes) == 0
