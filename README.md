@@ -13,16 +13,16 @@ A recipe recommendation application that helps you decide what to cook today!
 ## Setup
 
 1. Install Python 3.12 or higher
-2. Install dependencies using uv:
+2. Install dependencies using poetry:
    ```bash
-   uv sync
+   poetry install --no-root
    ```
 
 ## Running the Application
 
 1. Start the FastAPI server:
    ```bash
-   uv run python -m src
+   poetry run python -m src
    ```
 
 2. The API will be available at `http://localhost:8000`
@@ -52,7 +52,7 @@ The application implements a Streamlit-based web interface with the following fu
 1. Ensure API server is running (port 8000)
 2. Execute UI server:
    ```bash
-   uv --directory src/ui run streamlit run app.py
+   poetry --directory src/ui run streamlit run app.py
    ```
 3. Access UI at `http://localhost:8501`
 
@@ -82,7 +82,7 @@ The project must maintain the following quality metrics:
 ### Running Tests
 
 ```bash
-uv run python -m pytest
+poetry run python -m pytest
 ```
 
 ### Code Quality
@@ -106,13 +106,13 @@ To check these metrics:
 
 ```bash
 # Check cyclomatic complexity
-uv run radon cc src -a
+poetry run radon cc src -a
 
 # Check code duplication
-uv run pylint --disable=all --enable=duplicate-code src
+poetry run pylint --disable=all --enable=duplicate-code src
 
 # Check propagation cost
-uv run pylint --disable=all --enable=design src
+poetry run pylint --disable=all --enable=design src
 ```
 
 ### Performance Testing
@@ -121,10 +121,10 @@ The application includes performance testing using Locust. To run performance te
 
 ```bash
 # Basic load test (10 users, 10 spawn rate, 1 minute)
-uv run locust -f tests/load_test/locustfile.py -H http://localhost:8000 --headless -u 10 -r 10 --run-time 1m
+poetry run locust -f tests/load_test/locustfile.py -H http://localhost:8000 --headless -u 10 -r 10 --run-time 1m
 
 # Interactive load test (web interface)
-uv run locust -f tests/load_test/locustfile.py -H http://localhost:8000
+poetry run locust -f tests/load_test/locustfile.py -H http://localhost:8000
 ```
 
 Performance metrics:
@@ -138,7 +138,7 @@ Performance metrics:
 Security testing is performed using Bandit. To run security checks:
 
 ```bash
-uv run bandit -r src --exclude src/ui/.venv
+poetry run bandit -r src --exclude src/ui/.venv
 ```
 
 ### Fuzzing Tests
@@ -146,5 +146,5 @@ uv run bandit -r src --exclude src/ui/.venv
 The project includes fuzzing tests using Hypothesis. These tests are automatically run with pytest, but you can run them specifically:
 
 ```bash
-uv run python -m pytest tests/fuzzing -v
+poetry run python -m pytest tests/fuzzing -v
 ```
