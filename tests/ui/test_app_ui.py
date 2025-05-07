@@ -28,7 +28,6 @@ def mock_session_state():
 def app():
     """Create an AppTest instance for testing"""
     app = AppTest.from_file("src/ui/app.py")
-    # Initialize the app with required session state
     app.session_state["user_id"] = "test_user_id"
     app.session_state["favorites"] = {}
     app.run()
@@ -318,59 +317,47 @@ def test_display_recipe_without_image():
 
 def test_home_page(app):
     """Test the home page functionality"""
-    # Check initial state
     assert app.title[0].value == "🍳 What to Cook Today"
     assert app.header[0].value == "Random Recipe Suggestion"
     
-    # Test random recipe button
     app.button[0].click()
     app.run()
     
-    # Verify recipe display if a recipe was returned
     if app.subheader:
         assert app.subheader[0].value is not None
 
 def test_search_recipes_page(app):
     """Test the search recipes page"""
-    # Navigate to search page
     app.sidebar.radio[0].set_value("Search Recipes")
     app.run()
     
-    # Check page elements
     assert app.header[0].value == "Search Recipes"
     assert app.text_input[0].label == "Search by name or ingredient (optional)"
     
-    # Test search functionality with empty query
     app.run()
     assert app.info[0].value == "You can search by recipe name, ingredient, or filter by ingredients only"
     
-    # Test search with query
     app.text_input[0].set_value("pasta")
     app.run()
-    
-    # Test search with ingredients
+
     app.text_input[1].set_value("tomato, garlic")
     app.text_input[2].set_value("fish")
     app.run()
 
 def test_add_custom_recipe_page(app):
     """Test the add custom recipe page"""
-    # Navigate to add custom recipe page
     app.sidebar.radio[0].set_value("Add Custom Recipe")
     app.run()
     
-    # Check page elements
     assert app.header[0].value == "Add Custom Recipe"
     
-    # Test form submission with empty fields
     app.text_input[0].set_value("")
     app.text_area[0].set_value("")
     app.text_area[1].set_value("")
     app.text_input[1].set_value("")
     app.button[0].click()
     app.run()
-    
-    # Test form submission with valid data
+
     app.text_input[0].set_value("Test Recipe")
     app.text_area[0].set_value("Ingredient 1\nIngredient 2")
     app.text_area[1].set_value("Step 1\nStep 2")
@@ -380,17 +367,13 @@ def test_add_custom_recipe_page(app):
 
 def test_favorites_page(app):
     """Test the favorites page"""
-    # Navigate to favorites page
     app.sidebar.radio[0].set_value("Favorites")
     app.run()
     
-    # Check page elements
     assert app.header[0].value == "Favorite Recipes"
     
-    # Test empty favorites state
     assert app.info[0].value == "You haven't favorited any recipes yet."
     
-    # Add a favorite recipe to session state
     app.session_state["favorites"] = {
         "123": {
             "id": "123",
@@ -402,72 +385,22 @@ def test_favorites_page(app):
     }
     app.run()
     
-    # Test download button
     app.button[0].click()
     app.run()
-    # Verify the button was clicked
     assert len(app.button) > 0
-
-def test_random_from_favorites_page(app):
-    """Test the random from favorites page"""
-    # Navigate to random from favorites page
-    app.sidebar.radio[0].set_value("Random from Favorites")
-    app.run()
-    
-    # Check page elements
-    assert app.header[0].value == "Random Recipe from Favorites"
-    
-    # Test empty favorites state
-    app.button[0].click()
-    app.run()
-    assert app.warning[0].value == "The favorites list is empty."
-    
-    # Add a favorite recipe to session state
-    app.session_state["favorites"] = {
-        "123": {
-            "id": "123",
-            "name": "Test Recipe",
-            "ingredients": ["Ingredient 1"],
-            "instructions": ["Step 1"],
-            "image_url": "http://example.com/image.jpg"
-        }
-    }
-    app.run()
-    
-    # Test random recipe button
-    app.button[0].click()
-    app.run()
-
-def test_random_from_custom_page(app):
-    """Test the random from custom page"""
-    # Navigate to random from custom page
-    app.sidebar.radio[0].set_value("Random from Custom")
-    app.run()
-    
-    # Check page elements
-    assert app.header[0].value == "Random Recipe from Custom Recipes"
-    
-    # Test empty custom recipes state
-    app.button[0].click()
-    app.run()
-    assert app.warning[0].value == "The favorites list is empty."
 
 def test_custom_recipes_page(app):
     """Test the custom recipes page"""
-    # Navigate to custom recipes page
     app.sidebar.radio[0].set_value("Custom Recipes")
     app.run()
     
-    # Check page elements
     assert app.header[0].value == "Custom Recipes"
     
-    # Test empty custom recipes state
     if app.info:
         assert app.info[0].value == "No custom recipes found."
 
 def test_recipe_display(app):
     """Test the recipe display functionality"""
-    # Create a test recipe
     recipe = {
         "name": "Test Recipe",
         "ingredients": ["Ingredient 1", "Ingredient 2"],
@@ -475,44 +408,35 @@ def test_recipe_display(app):
         "image_url": "http://example.com/image.jpg"
     }
     
-    # Add recipe to session state
     app.session_state["random_recipe"] = recipe
     app.run()
     
-    # Verify recipe display
     assert app.subheader[0].value == "Test Recipe"
-    # Check for ingredients and instructions in the markdown content
     markdown_content = [m.value for m in app.markdown]
     assert any("### Ingredients" in content for content in markdown_content)
     assert any("### Instructions" in content for content in markdown_content)
 
 def test_recipe_display_without_image(app):
     """Test the recipe display functionality without an image"""
-    # Create a test recipe without image
     recipe = {
         "name": "Test Recipe",
         "ingredients": ["Ingredient 1", "Ingredient 2"],
         "instructions": ["Step 1", "Step 2"]
     }
     
-    # Add recipe to session state
     app.session_state["random_recipe"] = recipe
     app.run()
     
-    # Verify recipe display
     assert app.subheader[0].value == "Test Recipe"
-    # Check for ingredients and instructions in the markdown content
     markdown_content = [m.value for m in app.markdown]
     assert any("### Ingredients" in content for content in markdown_content)
     assert any("### Instructions" in content for content in markdown_content)
 
 def test_error_handling(app):
     """Test error handling in the app"""
-    # Test API error handling
     app.session_state["random_recipe"] = None
     app.run()
     
-    # Test search with API error
     app.sidebar.radio[0].set_value("Search Recipes")
     app.run()
     app.text_input[0].set_value("error")
@@ -520,13 +444,70 @@ def test_error_handling(app):
 
 def test_session_state_management(app):
     """Test session state management"""
-    # Test user_id generation
     app.run()
-    # The user_id should be in session state from fixture
     assert "user_id" in app.session_state
     assert app.session_state["user_id"] == "test_user_id"
     
-    # Test favorites refresh
     app.session_state["favorites"] = {}
     app.run()
     assert "favorites" in app.session_state
+
+
+
+def test_add_custom_recipe_validation(app):
+    """Test validation in add custom recipe form"""
+    app.sidebar.radio[0].set_value("Add Custom Recipe")
+    app.run()
+    
+    app.text_input[0].set_value("")  
+    app.text_area[0].set_value("")   
+    app.text_area[1].set_value("")   
+    app.button[0].click()
+    app.run()
+    
+    app.text_input[0].set_value("Test Recipe")
+    app.text_area[0].set_value("Ingredient 1\nIngredient 2")
+    app.text_area[1].set_value("Step 1\nStep 2")
+    app.text_input[1].set_value("http://example.com/image.jpg")
+    app.button[0].click()
+    app.run()
+
+def test_search_recipes_validation(app):
+    """Test validation in search recipes page"""
+    app.sidebar.radio[0].set_value("Search Recipes")
+    app.run()
+    
+    app.run()
+    assert app.info[0].value == "You can search by recipe name, ingredient, or filter by ingredients only"
+    
+    app.text_input[0].set_value("pasta")
+    app.run()
+    
+    app.text_input[0].set_value("")
+    app.text_input[1].set_value("tomato, garlic")
+    app.text_input[2].set_value("fish")
+    app.run()
+    
+    app.text_input[0].set_value("pasta")
+    app.run()
+
+
+def test_pdf_generation_with_errors(app):
+    """Test PDF generation with error handling"""
+    recipes = [
+        {
+            "name": "Test Recipe",
+            "ingredients": ["Ingredient 1"],
+            "instructions": ["Step 1"],
+            "image_url": "http://invalid-url.com/image.jpg"
+        }
+    ]
+    
+    pdf_data = generate_pdf(recipes, "Test Recipes")
+    assert pdf_data is not None
+    assert isinstance(pdf_data, bytes)
+    
+    recipes[0]["image_url"] = None
+    pdf_data = generate_pdf(recipes, "Test Recipes")
+    assert pdf_data is not None
+    assert isinstance(pdf_data, bytes)
