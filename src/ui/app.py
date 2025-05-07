@@ -24,6 +24,7 @@ RemoveEmptyElementContainer()
 # Initialize httpx client
 @st.cache_resource
 def get_client():
+    #print(httpx.Client(base_url=API_BASE_URL))
     return httpx.Client(base_url=API_BASE_URL)
 
 
@@ -49,6 +50,11 @@ def get_random_recipe() -> dict | None:
     """Get a random recipe from the API"""
     try:
         response = get_client().get("/recipes/random")
+        #print(dir(response))
+        # print(response.text)
+        # print(response.url)
+        # print(response.headers)
+        # print(response.request)
         response.raise_for_status()
         return response.json()
     except httpx.HTTPError as e:
@@ -316,6 +322,152 @@ def get_random_recipe_from_custom():
         return None
 
 
+def render_home_page(): 
+    st.header("Random Recipe Suggestion")
+
+    # Initialize random recipe in session state if not exists
+    if "random_recipe" not in st.session_state:
+        st.session_state.random_recipe = None
+
+    # Get new random recipe button
+    if st.button("Get Random Recipe"):
+        recipe = get_random_recipe()
+        if recipe:
+            st.session_state.random_recipe = recipe
+
+    # Display current random recipe if exists
+    if st.session_state.random_recipe:
+        display_recipe(st.session_state.random_recipe)
+    
+
+def render_search_recipes_page(): 
+    st.header("Search Recipes")
+    st.info("You can search by recipe name, ingredient, or filter by ingredients only")
+    search_query = st.text_input(
+        "Search by name or ingredient (optional)", help="Leave empty to search by ingredients only"
+    )
+
+    # Add ingredient filtering controls
+    col1, col2 = st.columns(2)
+    with col1:
+        include_ingredients = st.text_input(
+            "Include ingredients (comma-separated)",
+            help="Show recipes that contain ANY of these ingredients (measurements like '100g' or '2 cups' are ignored)",
+        )
+    with col2:
+        exclude_ingredients = st.text_input(
+            "Exclude ingredients (comma-separated)",
+            help="Hide recipes that contain ANY of these ingredients (measurements like '100g' or '2 cups' are ignored)",
+        )
+
+    # Search when either search_query or include_ingredients is provided
+    if search_query or include_ingredients:
+        recipes = search_recipes(search_query, include_ingredients, exclude_ingredients)
+        if recipes:
+            for recipe in recipes:
+                display_recipe(recipe)
+        else:
+            st.info("No recipes found matching your search criteria.")
+
+def render_favorites_page(): 
+    st.header("Favorite Recipes")
+    favorites = get_favorite_recipes()
+    if favorites:
+        if st.button("I want to download the recipes"):
+            pdf_data = generate_pdf(favorites, "Favorite Recipes")
+            st.download_button(
+                label="Download PDF",
+                data=pdf_data,
+                file_name="favorite_recipes.pdf",
+                mime="application/pdf"
+            )
+        for recipe in favorites:
+            display_recipe(recipe)
+    else:
+        st.info("You haven't favorited any recipes yet.")
+
+def render_add_custom_recipe_page():
+    st.header("Add Custom Recipe")
+    with st.form("custom_recipe_form"):
+        name = st.text_input("Recipe Name")
+        ingredients = st.text_area("Ingredients (one per line)")
+        instructions = st.text_area("Instructions (one step per line)")
+        image_url = st.text_input("Image URL (optional)")
+
+        submitted = st.form_submit_button("Add Recipe")
+        if submitted:
+            recipe = {
+                "id": str(uuid.uuid4()),
+                "name": name,
+                "ingredients": [i.strip() for i in ingredients.split("\n") if i.strip()],
+                "instructions": "\n".join([i.strip() for i in instructions.split("\n") if i.strip()]),
+                "image_url": image_url if image_url else None,
+                "is_favorite": False,
+                "is_custom": True
+            }
+            if add_custom_recipe(recipe):
+                st.success("Recipe added successfully!")
+            else:
+                st.error("Failed to add recipe.")
+
+def render_random_from_favorites_page():
+    st.header("Random Recipe from Favorites")
+
+    if "random_favorite_recipe" not in st.session_state:
+        st.session_state.random_favorite_recipe = None
+
+    if st.button("Get Random Recipe from Favorites"):
+        recipe = get_random_recipe_from_favorites()
+        if recipe:
+            st.session_state.random_favorite_recipe = recipe
+        else:
+            st.warning("The favorites list is empty.")
+
+    if st.session_state.random_favorite_recipe:
+        display_recipe(st.session_state.random_favorite_recipe)
+
+def render_random_from_custom_page():
+    st.header("Random Recipe from Custom Recipes")
+
+    if "random_custom_recipe" not in st.session_state:
+        st.session_state.random_custom_recipe = None
+
+    if st.button("Get Random Recipe from Custom"):
+        recipe = get_random_recipe_from_custom()
+        if recipe:
+            st.session_state.random_custom_recipe = recipe
+        else:
+            st.warning("The favorites list is empty.")
+
+    if st.session_state.random_custom_recipe:
+        display_recipe(st.session_state.random_custom_recipe)
+
+def render_custom_recipes_page():
+    st.header("Custom Recipes")
+
+    try:
+        response = get_client().get("/recipes/custom")
+        response.raise_for_status()
+        custom_recipes = response.json()
+
+        if custom_recipes:
+            if st.button("I want to download the recipes"):
+                pdf_data = generate_pdf(custom_recipes, "Custom Recipes")
+                st.download_button(
+                    label="Download PDF",
+                    data=pdf_data,
+                    file_name="custom_recipes.pdf",
+                    mime="application/pdf"
+                )
+            for recipe in custom_recipes:
+                display_recipe(recipe)
+        else:
+            st.info("No custom recipes found.")
+
+    except httpx.HTTPError as e:
+        st.error(f"Error fetching custom recipes: {str(e)}")
+
+
 def main():
     st.title("🍳 What to Cook Today")
 
@@ -323,148 +475,20 @@ def main():
     page = st.sidebar.radio("Navigation", ["Home", "Search Recipes", "Custom Recipes", "Add Custom Recipe", "Random from Favorites", "Random from Custom", "Favorites"])
 
     if page == "Home":
-        st.header("Random Recipe Suggestion")
-
-        # Initialize random recipe in session state if not exists
-        if "random_recipe" not in st.session_state:
-            st.session_state.random_recipe = None
-
-        # Get new random recipe button
-        if st.button("Get Random Recipe"):
-            recipe = get_random_recipe()
-            if recipe:
-                st.session_state.random_recipe = recipe
-
-        # Display current random recipe if exists
-        if st.session_state.random_recipe:
-            display_recipe(st.session_state.random_recipe)
-
+        render_home_page()
     elif page == "Search Recipes":
-        st.header("Search Recipes")
-        st.info("You can search by recipe name, ingredient, or filter by ingredients only")
-        search_query = st.text_input(
-            "Search by name or ingredient (optional)", help="Leave empty to search by ingredients only"
-        )
-
-        # Add ingredient filtering controls
-        col1, col2 = st.columns(2)
-        with col1:
-            include_ingredients = st.text_input(
-                "Include ingredients (comma-separated)",
-                help="Show recipes that contain ANY of these ingredients (measurements like '100g' or '2 cups' are ignored)",
-            )
-        with col2:
-            exclude_ingredients = st.text_input(
-                "Exclude ingredients (comma-separated)",
-                help="Hide recipes that contain ANY of these ingredients (measurements like '100g' or '2 cups' are ignored)",
-            )
-
-        # Search when either search_query or include_ingredients is provided
-        if search_query or include_ingredients:
-            recipes = search_recipes(search_query, include_ingredients, exclude_ingredients)
-            if recipes:
-                for recipe in recipes:
-                    display_recipe(recipe)
-            else:
-                st.info("No recipes found matching your search criteria.")
-
+        render_search_recipes_page()
     elif page == "Favorites":
-        st.header("Favorite Recipes")
-        favorites = get_favorite_recipes()
-        if favorites:
-            if st.button("I want to download the recipes"):
-                pdf_data = generate_pdf(favorites, "Favorite Recipes")
-                st.download_button(
-                    label="Download PDF",
-                    data=pdf_data,
-                    file_name="favorite_recipes.pdf",
-                    mime="application/pdf"
-                )
-            for recipe in favorites:
-                display_recipe(recipe)
-        else:
-            st.info("You haven't favorited any recipes yet.")
-
+        render_favorites_page()
     elif page == "Add Custom Recipe":
-        st.header("Add Custom Recipe")
-        with st.form("custom_recipe_form"):
-            name = st.text_input("Recipe Name")
-            ingredients = st.text_area("Ingredients (one per line)")
-            instructions = st.text_area("Instructions (one step per line)")
-            image_url = st.text_input("Image URL (optional)")
-
-            submitted = st.form_submit_button("Add Recipe")
-            if submitted:
-                recipe = {
-                    "id": str(uuid.uuid4()),
-                    "name": name,
-                    "ingredients": [i.strip() for i in ingredients.split("\n") if i.strip()],
-                    "instructions": "\n".join([i.strip() for i in instructions.split("\n") if i.strip()]),
-                    "image_url": image_url if image_url else None,
-                    "is_favorite": False,
-                    "is_custom": True
-                }
-                if add_custom_recipe(recipe):
-                    st.success("Recipe added successfully!")
-                else:
-                    st.error("Failed to add recipe.")
-
+        render_add_custom_recipe_page()
     elif page == "Random from Favorites":
-        st.header("Random Recipe from Favorites")
-
-        if "random_favorite_recipe" not in st.session_state:
-            st.session_state.random_favorite_recipe = None
-
-        if st.button("Get Random Recipe from Favorites"):
-            recipe = get_random_recipe_from_favorites()
-            if recipe:
-                st.session_state.random_favorite_recipe = recipe
-            else:
-                st.warning("The favorites list is empty.")
-
-        if st.session_state.random_favorite_recipe:
-            display_recipe(st.session_state.random_favorite_recipe)
-
+        render_random_from_favorites_page()
     elif page == "Random from Custom":
-        st.header("Random Recipe from Custom Recipes")
-
-        if "random_custom_recipe" not in st.session_state:
-            st.session_state.random_custom_recipe = None
-
-        if st.button("Get Random Recipe from Custom"):
-            recipe = get_random_recipe_from_custom()
-            if recipe:
-                st.session_state.random_custom_recipe = recipe
-            else:
-                st.warning("The favorites list is empty.")
-
-        if st.session_state.random_custom_recipe:
-            display_recipe(st.session_state.random_custom_recipe)
-
+        render_random_from_custom_page()
     elif page == "Custom Recipes":
-        st.header("Custom Recipes")
+        render_custom_recipes_page()
 
-        try:
-            response = get_client().get("/recipes/custom")
-            response.raise_for_status()
-            custom_recipes = response.json()
-
-            if custom_recipes:
-                if st.button("I want to download the recipes"):
-                    pdf_data = generate_pdf(custom_recipes, "Custom Recipes")
-                    st.download_button(
-                        label="Download PDF",
-                        data=pdf_data,
-                        file_name="custom_recipes.pdf",
-                        mime="application/pdf"
-                    )
-                for recipe in custom_recipes:
-                    display_recipe(recipe)
-            else:
-                st.info("No custom recipes found.")
-
-        except httpx.HTTPError as e:
-            st.error(f"Error fetching custom recipes: {str(e)}")
 
 
 if __name__ == "__main__":
