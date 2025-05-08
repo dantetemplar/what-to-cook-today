@@ -25,13 +25,37 @@ jobs:
           poetry config virtualenvs.create false
           poetry install --no-interaction --no-ansi --no-root
 
-      - name: Run linting
+      - name: Run linting with ruff
         run: |
-          ruff check src tests
+          poetry run ruff check src tests
+
+      - name: Run linting with flake8
+        run: |
+          poetry run flake8 --ignore=E501,W503 src tests
+
+      - name: Code cyclomatic complixity analysis
+        run: |
+          poetry run radon cc src -a
+
+      - name: Code duplication check
+        run: |
+          poetry run pylint --disable=all --enable=duplicate-code src
+
+      - name: Check propagation cost
+        run: |
+          poetry run pylint --disable=all --enable=design src
 
       - name: Run tests & generate coverage
         run: |
-          pytest --junitxml=reports/junit.xml --cov=src --cov-report=xml:coverage.xml || true
+          poetry run python -m pytest
+
+      - name: Run fuzz-tests & generate coverage
+        run: |
+          poetry run python -m pytest tests/fuzzing -v --cov=src --cov-config=.fuzz-coveragerc
+
+      - name: Security check with bandit
+        run: |
+          poetry run bandit -r src --exclude src/ui/.venv
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v2
