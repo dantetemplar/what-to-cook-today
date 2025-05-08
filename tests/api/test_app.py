@@ -262,7 +262,7 @@ def test_search_recipes_filter_exclude_ingredients(client):
 def test_get_random_favorite_recipe(client, sample_recipe):
     """Test lines 160-165: Get a random recipe from favorites."""
     with patch("src.api.app.db.get_favorite_recipes") as mock_get_favorites:
-        with patch("src.api.app.random.choice") as mock_choice:
+        with patch("src.api.app.secrets.choice") as mock_choice:
             mock_get_favorites.return_value = [sample_recipe]
             mock_choice.return_value = sample_recipe
 
@@ -285,7 +285,7 @@ def test_get_random_favorite_recipe_empty(client):
 def test_get_random_custom_recipe(client, sample_recipe):
     """Test lines 172-177: Get a random recipe from custom recipes."""
     with patch("src.api.app.db.get_custom_recipes") as mock_get_custom:
-        with patch("src.api.app.random.choice") as mock_choice:
+        with patch("src.api.app.secrets.choice") as mock_choice:
             mock_get_custom.return_value = [sample_recipe]
             mock_choice.return_value = sample_recipe
 
