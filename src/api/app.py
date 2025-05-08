@@ -1,4 +1,3 @@
-import random
 import secrets
 
 from fastapi import FastAPI, HTTPException
