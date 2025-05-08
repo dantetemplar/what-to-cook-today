@@ -1,4 +1,5 @@
 import random
+import secrets
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,14 +25,8 @@ api_service = APIService()
 db = Database()
 
 
-class RecipeResponse(BaseModel):
-    id: str
-    name: str
-    image_url: str | None
-    instructions: str
-    ingredients: list[str]
-    is_favorite: bool
-    is_custom: bool
+class RecipeResponse(Recipe):
+    pass
 
 
 class FavoriteRequest(BaseModel):
@@ -167,7 +162,7 @@ def get_random_favorite_recipe(user_id: str):
     if not favorite_recipes:
         return {"error": "No favorite recipes found."}
 
-    random_recipe = random.choice(favorite_recipes)
+    random_recipe = secrets.choice(favorite_recipes)
     return random_recipe
 
 
@@ -179,5 +174,5 @@ def get_random_custom_recipe(user_id: str):
     if not custom_recipes:
         return {"error": "No custom recipes found."}
 
-    random_recipe = random.choice(custom_recipes)
+    random_recipe = secrets.choice(custom_recipes)
     return random_recipe
