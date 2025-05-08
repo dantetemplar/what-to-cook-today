@@ -2,6 +2,10 @@
 
 A recipe recommendation application that helps you decide what to cook today!
 
+## Quality report 
+
+Quality report of this project can be found at this link: [Quality Report](REPORT.md)
+
 ## Features
 
 - Get random recipe suggestions
