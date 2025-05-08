@@ -24,7 +24,7 @@ RemoveEmptyElementContainer()
 # Initialize httpx client
 @st.cache_resource
 def get_client():
-    #print(httpx.Client(base_url=API_BASE_URL))
+    # print(httpx.Client(base_url=API_BASE_URL))
     return httpx.Client(base_url=API_BASE_URL)
 
 
@@ -50,7 +50,7 @@ def get_random_recipe() -> dict | None:
     """Get a random recipe from the API"""
     try:
         response = get_client().get("/recipes/random")
-        #print(dir(response))
+        # print(dir(response))
         # print(response.text)
         # print(response.url)
         # print(response.headers)
@@ -63,7 +63,9 @@ def get_random_recipe() -> dict | None:
 
 
 def search_recipes(
-    query: str, include_ingredients: str | None = None, exclude_ingredients: str | None = None
+    query: str,
+    include_ingredients: str | None = None,
+    exclude_ingredients: str | None = None,
 ) -> list[dict]:
     """Search recipes by name or ingredient with optional ingredient filtering"""
     try:
@@ -115,18 +117,24 @@ def toggle_favorite(recipe_id: str) -> bool:
     try:
         user_id = get_user_id()
         logger.info(f"Toggling favorite for recipe_id: {recipe_id}, user_id: {user_id}")
-        logger.info(f"Current favorites before toggle: {list(st.session_state.get('favorites', {}).keys())}")
+        logger.info(
+            f"Current favorites before toggle: {list(st.session_state.get('favorites', {}).keys())}"
+        )
 
         # Ensure recipe_id is a string
         recipe_id = str(recipe_id)
 
-        response = get_client().post(f"/recipes/{recipe_id}/favorite", json={"user_id": user_id})
+        response = get_client().post(
+            f"/recipes/{recipe_id}/favorite", json={"user_id": user_id}
+        )
         response.raise_for_status()
         logger.info("Successfully toggled favorite")
 
         # Refresh favorites after toggling
         refresh_favorites()
-        logger.info(f"Favorites after toggle: {list(st.session_state.get('favorites', {}).keys())}")
+        logger.info(
+            f"Favorites after toggle: {list(st.session_state.get('favorites', {}).keys())}"
+        )
         return True
     except httpx.HTTPError as e:
         logger.error(f"HTTP error toggling favorite status: {str(e)}")
@@ -178,7 +186,9 @@ def handle_favorite_click(recipe_id: str, current_favorite: bool, recipe: dict):
                 # Add to favorites
                 st.session_state["favorites"][recipe_id] = recipe
 
-            logger.info(f"Updated session state favorites: {list(st.session_state['favorites'].keys())}")
+            logger.info(
+                f"Updated session state favorites: {list(st.session_state['favorites'].keys())}"
+            )
             return True
         else:
             logger.info("Toggle failed")
@@ -212,7 +222,9 @@ def display_recipe(recipe: dict):
     # Handle different instruction formats
     if isinstance(instructions, str):
         # Split by newlines and clean up
-        instructions = [line.strip() for line in instructions.split("\n") if line.strip()]
+        instructions = [
+            line.strip() for line in instructions.split("\n") if line.strip()
+        ]
 
     # Process and display instructions
     for idx, instruction in enumerate(instructions, 1):
@@ -226,13 +238,19 @@ def display_recipe(recipe: dict):
     recipe_id = recipe.get("id")
     if recipe_id:
         current_favorite = is_favorite(recipe_id)
-        logger.info(f"Displaying recipe {recipe_id}, current favorite status: {current_favorite}")
+        logger.info(
+            f"Displaying recipe {recipe_id}, current favorite status: {current_favorite}"
+        )
 
         # Create a container for the button to ensure it's always rendered
         with st.container():
             col1, col2 = st.columns([1, 4])
             with col1:
-                button_text = "❤️ Remove from Favorites" if current_favorite else "🤍 Add to Favorites"
+                button_text = (
+                    "❤️ Remove from Favorites"
+                    if current_favorite
+                    else "🤍 Add to Favorites"
+                )
                 if st.button(button_text, key=f"fav_{recipe_id}"):
                     handle_favorite_click(recipe_id, current_favorite, recipe)
 
@@ -243,7 +261,7 @@ def generate_pdf(recipes: list[dict], title: str) -> bytes:
     pdf.add_page()
     pdf.set_font("Courier", size=12)
 
-    pdf.set_font("Courier", style="B", size=18) # Title font
+    pdf.set_font("Courier", style="B", size=18)  # Title font
     pdf.cell(200, 10, txt=title, ln=True, align="C")
     pdf.ln(10)
 
@@ -264,7 +282,7 @@ def generate_pdf(recipes: list[dict], title: str) -> bytes:
 
                 current_y = pdf.get_y()
                 pdf.image(temp_image_path, x=10, y=current_y, w=100)
-                pdf.set_y(current_y + 70) 
+                pdf.set_y(current_y + 70)
                 pdf.ln(30)
 
             except Exception as e:
@@ -286,7 +304,9 @@ def generate_pdf(recipes: list[dict], title: str) -> bytes:
         pdf.set_font("Arial", size=12)
         instructions = recipe.get("instructions", [])
         if isinstance(instructions, str):
-            instructions = [line.strip() for line in instructions.split("\n") if line.strip()]
+            instructions = [
+                line.strip() for line in instructions.split("\n") if line.strip()
+            ]
         for idx, instruction in enumerate(instructions, 1):
             pdf.multi_cell(0, 10, txt=f"{idx}. {instruction}")
         pdf.ln(10)
@@ -297,7 +317,7 @@ def generate_pdf(recipes: list[dict], title: str) -> bytes:
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(10)
 
-    return pdf.output(dest="S").encode("latin1") # save pdf
+    return pdf.output(dest="S").encode("latin1")  # save pdf
 
 
 def get_random_recipe_from_favorites():
@@ -322,7 +342,7 @@ def get_random_recipe_from_custom():
         return None
 
 
-def render_home_page(): 
+def render_home_page():
     st.header("Random Recipe Suggestion")
 
     # Initialize random recipe in session state if not exists
@@ -338,13 +358,14 @@ def render_home_page():
     # Display current random recipe if exists
     if st.session_state.random_recipe:
         display_recipe(st.session_state.random_recipe)
-    
 
-def render_search_recipes_page(): 
+
+def render_search_recipes_page():
     st.header("Search Recipes")
     st.info("You can search by recipe name, ingredient, or filter by ingredients only")
     search_query = st.text_input(
-        "Search by name or ingredient (optional)", help="Leave empty to search by ingredients only"
+        "Search by name or ingredient (optional)",
+        help="Leave empty to search by ingredients only",
     )
 
     # Add ingredient filtering controls
@@ -369,7 +390,8 @@ def render_search_recipes_page():
         else:
             st.info("No recipes found matching your search criteria.")
 
-def render_favorites_page(): 
+
+def render_favorites_page():
     st.header("Favorite Recipes")
     favorites = get_favorite_recipes()
     if favorites:
@@ -379,12 +401,13 @@ def render_favorites_page():
                 label="Download PDF",
                 data=pdf_data,
                 file_name="favorite_recipes.pdf",
-                mime="application/pdf"
+                mime="application/pdf",
             )
         for recipe in favorites:
             display_recipe(recipe)
     else:
         st.info("You haven't favorited any recipes yet.")
+
 
 def render_add_custom_recipe_page():
     st.header("Add Custom Recipe")
@@ -399,16 +422,21 @@ def render_add_custom_recipe_page():
             recipe = {
                 "id": str(uuid.uuid4()),
                 "name": name,
-                "ingredients": [i.strip() for i in ingredients.split("\n") if i.strip()],
-                "instructions": "\n".join([i.strip() for i in instructions.split("\n") if i.strip()]),
+                "ingredients": [
+                    i.strip() for i in ingredients.split("\n") if i.strip()
+                ],
+                "instructions": "\n".join(
+                    [i.strip() for i in instructions.split("\n") if i.strip()]
+                ),
                 "image_url": image_url if image_url else None,
                 "is_favorite": False,
-                "is_custom": True
+                "is_custom": True,
             }
             if add_custom_recipe(recipe):
                 st.success("Recipe added successfully!")
             else:
                 st.error("Failed to add recipe.")
+
 
 def render_random_from_favorites_page():
     st.header("Random Recipe from Favorites")
@@ -426,6 +454,7 @@ def render_random_from_favorites_page():
     if st.session_state.random_favorite_recipe:
         display_recipe(st.session_state.random_favorite_recipe)
 
+
 def render_random_from_custom_page():
     st.header("Random Recipe from Custom Recipes")
 
@@ -442,6 +471,7 @@ def render_random_from_custom_page():
     if st.session_state.random_custom_recipe:
         display_recipe(st.session_state.random_custom_recipe)
 
+
 def render_custom_recipes_page():
     st.header("Custom Recipes")
 
@@ -457,7 +487,7 @@ def render_custom_recipes_page():
                     label="Download PDF",
                     data=pdf_data,
                     file_name="custom_recipes.pdf",
-                    mime="application/pdf"
+                    mime="application/pdf",
                 )
             for recipe in custom_recipes:
                 display_recipe(recipe)
@@ -472,7 +502,18 @@ def main():
     st.title("🍳 What to Cook Today")
 
     # Sidebar navigation
-    page = st.sidebar.radio("Navigation", ["Home", "Search Recipes", "Custom Recipes", "Add Custom Recipe", "Random from Favorites", "Random from Custom", "Favorites"])
+    page = st.sidebar.radio(
+        "Navigation",
+        [
+            "Home",
+            "Search Recipes",
+            "Custom Recipes",
+            "Add Custom Recipe",
+            "Random from Favorites",
+            "Random from Custom",
+            "Favorites",
+        ],
+    )
 
     if page == "Home":
         render_home_page()
@@ -488,7 +529,6 @@ def main():
         render_random_from_custom_page()
     elif page == "Custom Recipes":
         render_custom_recipes_page()
-
 
 
 if __name__ == "__main__":

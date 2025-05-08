@@ -8,7 +8,9 @@ id_strategy = st.text(min_size=1, max_size=50)
 name_strategy = st.text(min_size=1, max_size=100)
 url_strategy = st.text(min_size=1, max_size=200)  # Removed http filter
 instructions_strategy = st.text(min_size=1, max_size=1000)
-ingredients_strategy = st.lists(st.text(min_size=1, max_size=50), min_size=1, max_size=20)
+ingredients_strategy = st.lists(
+    st.text(min_size=1, max_size=50), min_size=1, max_size=20
+)
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
@@ -21,7 +23,9 @@ ingredients_strategy = st.lists(st.text(min_size=1, max_size=50), min_size=1, ma
     is_favorite=st.booleans(),
     is_custom=st.booleans(),
 )
-def test_recipe_creation_fuzzing(id, name, image_url, instructions, ingredients, is_favorite, is_custom):
+def test_recipe_creation_fuzzing(
+    id, name, image_url, instructions, ingredients, is_favorite, is_custom
+):
     """Test Recipe creation with fuzzed inputs"""
     recipe = Recipe(
         id=id,
@@ -81,7 +85,9 @@ def test_recipe_from_dict_fuzzing(recipe_dict):
     is_favorite=st.booleans(),
     is_custom=st.booleans(),
 )
-def test_recipe_to_dict_fuzzing(id, name, image_url, instructions, ingredients, is_favorite, is_custom):
+def test_recipe_to_dict_fuzzing(
+    id, name, image_url, instructions, ingredients, is_favorite, is_custom
+):
     """Test Recipe.to_dict with fuzzed inputs"""
     recipe = Recipe(
         id=id,
@@ -126,7 +132,9 @@ def test_recipe_from_dict_invalid_inputs(recipe_dict):
     try:
         Recipe.from_dict(recipe_dict)
         # If we get here, the input was valid
-        assert all(key in recipe_dict for key in ["id", "name", "instructions", "ingredients"])
+        assert all(
+            key in recipe_dict for key in ["id", "name", "instructions", "ingredients"]
+        )
     except (KeyError, TypeError, ValueError):
         # Expected for invalid inputs
         pass
@@ -134,7 +142,9 @@ def test_recipe_from_dict_invalid_inputs(recipe_dict):
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(
-    text=st.text(min_size=0, max_size=1000).filter(lambda x: any(c in x for c in "!@#$%^&*()_+-=[]{}|;:,.<>?/~`"))
+    text=st.text(min_size=0, max_size=1000).filter(
+        lambda x: any(c in x for c in "!@#$%^&*()_+-=[]{}|;:,.<>?/~`")
+    )
 )
 def test_recipe_with_special_characters(text):
     """Test Recipe creation with special characters in text fields"""
@@ -147,7 +157,7 @@ def test_recipe_with_special_characters(text):
         is_favorite=False,
         is_custom=False,
     )
-    
+
     assert recipe.id == text[:50]
     assert recipe.name == text[:100]
     assert recipe.image_url == text[:200]
@@ -182,9 +192,7 @@ def test_recipe_empty_ingredients(ingredients):
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
-@given(
-    text=st.text(min_size=0, max_size=1)
-)
+@given(text=st.text(min_size=0, max_size=1))
 def test_recipe_minimal_text_fields(text):
     """Test Recipe creation with minimal length text fields"""
     recipe = Recipe(
@@ -196,7 +204,7 @@ def test_recipe_minimal_text_fields(text):
         is_favorite=False,
         is_custom=False,
     )
-    
+
     assert recipe.id == text
     assert recipe.name == text
     assert recipe.image_url == text

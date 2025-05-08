@@ -49,7 +49,11 @@ class APIService:
             ingredient = meal.get(f"strIngredient{i}")
             measure = meal.get(f"strMeasure{i}")
             if ingredient and ingredient.strip():
-                ingredients.append(f"{measure.strip()} {ingredient.strip()}" if measure else ingredient.strip())
+                ingredients.append(
+                    f"{measure.strip()} {ingredient.strip()}"
+                    if measure
+                    else ingredient.strip()
+                )
 
         return Recipe(
             id=meal["idMeal"],

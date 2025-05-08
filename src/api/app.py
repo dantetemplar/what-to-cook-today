@@ -96,7 +96,10 @@ async def search_recipes(
             r
             for r in recipes
             if any(
-                any(include_ing in extract_ingredient_name(ing).lower() for ing in r.ingredients)
+                any(
+                    include_ing in extract_ingredient_name(ing).lower()
+                    for ing in r.ingredients
+                )
                 for include_ing in include_list
             )
         ]
@@ -107,7 +110,10 @@ async def search_recipes(
             r
             for r in recipes
             if not any(
-                any(exclude_ing in extract_ingredient_name(ing).lower() for ing in r.ingredients)
+                any(
+                    exclude_ing in extract_ingredient_name(ing).lower()
+                    for ing in r.ingredients
+                )
                 for exclude_ing in exclude_list
             )
         ]
@@ -153,7 +159,7 @@ async def add_custom_recipe(recipe: RecipeResponse) -> RecipeResponse:
     return RecipeResponse(**custom_recipe.to_dict())
 
 
-# A random recipe from the list of favorites 
+# A random recipe from the list of favorites
 @app.get("/recipes/random_from_favorites")
 def get_random_favorite_recipe(user_id: str):
 
@@ -165,7 +171,7 @@ def get_random_favorite_recipe(user_id: str):
     return random_recipe
 
 
-# Random recipe from the custom list 
+# Random recipe from the custom list
 @app.get("/recipes/random_from_custom")
 def get_random_custom_recipe(user_id: str):
 

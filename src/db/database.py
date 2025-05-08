@@ -42,7 +42,7 @@ class Database:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                INSERT OR REPLACE INTO recipes 
+                INSERT OR REPLACE INTO recipes
                 (id, name, image_url, instructions, ingredients, is_custom)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
@@ -127,7 +127,7 @@ class Database:
                     LEFT JOIN favorites f ON r.id = f.recipe_id
                     WHERE r.is_custom = 1 AND (f.user_id = ? OR f.user_id IS NULL)
                     """,
-                    (user_id,)
+                    (user_id,),
                 )
             else:
                 cursor.execute("SELECT * FROM recipes WHERE is_custom = 1")

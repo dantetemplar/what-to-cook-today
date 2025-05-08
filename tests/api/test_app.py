@@ -145,10 +145,12 @@ def test_search_recipes_no_criteria(client):
 def test_search_recipes_with_include_ingredients(client, sample_recipe):
     """Test lines 69-72: When include_ingredients is provided, get recipes from both database and API."""
     with patch("src.api.app.db.get_all_recipes") as mock_get_all:
-        with patch("src.api.app.api_service.search_recipes_by_ingredient") as mock_search:
+        with patch(
+            "src.api.app.api_service.search_recipes_by_ingredient"
+        ) as mock_search:
             mock_get_all.return_value = [sample_recipe]
             mock_search.return_value = []
-            
+
             response = client.get("/recipes/search?include_ingredients=flour")
             assert response.status_code == 200
             mock_get_all.assert_called_once()
@@ -158,7 +160,7 @@ def test_search_recipes_with_include_ingredients(client, sample_recipe):
 def test_extract_ingredient_name():
     """Test lines 77-90: The extract_ingredient_name function."""
     # Instead of trying to use exec, which doesn't work well, we'll reimplement the function for testing
-    
+
     def extract_ingredient_name(ingredient_str: str) -> str:
         # Remove measurements and units (e.g., "100g Flour" -> "Flour")
         # Split by space and take the last word(s) that form the ingredient name
@@ -166,17 +168,25 @@ def test_extract_ingredient_name():
         # Find the first word that doesn't look like a measurement or unit
         for i, part in enumerate(parts):
             if not any(c.isdigit() for c in part) and part.lower() not in [
-                "g", "ml", "tbsp", "tsp", "tbls", "to", "serve",
+                "g",
+                "ml",
+                "tbsp",
+                "tsp",
+                "tbls",
+                "to",
+                "serve",
             ]:
                 return " ".join(parts[i:])
         return ingredient_str
-    
+
     # Now test various inputs to cover the function logic
     assert extract_ingredient_name("100g Flour") == "Flour"
     assert extract_ingredient_name("2 tbsp Sugar") == "Sugar"
     assert extract_ingredient_name("Salt") == "Salt"
     assert extract_ingredient_name("50ml Milk") == "Milk"
-    assert extract_ingredient_name("100g") == "100g"  # Should return the original if no ingredient name is found
+    assert (
+        extract_ingredient_name("100g") == "100g"
+    )  # Should return the original if no ingredient name is found
 
 
 def test_search_recipes_filter_include_ingredients(client, sample_recipe):
@@ -189,21 +199,25 @@ def test_search_recipes_filter_include_ingredients(client, sample_recipe):
         instructions="Use flour",
         ingredients=["100g Flour", "Sugar"],
     )
-    
+
     with patch("src.api.app.db.get_all_recipes") as mock_get_all:
-        with patch("src.api.app.api_service.search_recipes_by_ingredient") as mock_search:
-            with patch("src.api.app.db.add_recipe") as mock_add_recipe:  # Mock the database add_recipe method
+        with patch(
+            "src.api.app.api_service.search_recipes_by_ingredient"
+        ) as mock_search:
+            with patch(
+                "src.api.app.db.add_recipe"
+            ) as mock_add_recipe:  # Mock the database add_recipe method
                 # Set up to return recipes from database only
                 mock_get_all.return_value = [sample_recipe, recipe_with_match]
                 mock_search.return_value = []
-                
+
                 # Only recipe_with_match should be returned as it has flour
                 response = client.get("/recipes/search?include_ingredients=flour")
                 assert response.status_code == 200
                 data = response.json()
                 assert len(data) == 1
                 assert data[0]["name"] == "Recipe with flour"
-                
+
                 # Verify add_recipe was called with the matching recipe
                 mock_add_recipe.assert_called()
 
@@ -217,7 +231,7 @@ def test_search_recipes_filter_exclude_ingredients(client):
         instructions="Use flour",
         ingredients=["100g Flour", "Sugar"],
     )
-    
+
     recipe2 = Recipe(
         id="456",
         name="Recipe without flour",
@@ -225,18 +239,22 @@ def test_search_recipes_filter_exclude_ingredients(client):
         instructions="No flour",
         ingredients=["Sugar", "Eggs"],
     )
-    
+
     with patch("src.api.app.api_service.search_recipes_by_name") as mock_search:
-        with patch("src.api.app.db.add_recipe") as mock_add_recipe:  # Mock the database add_recipe method
+        with patch(
+            "src.api.app.db.add_recipe"
+        ) as mock_add_recipe:  # Mock the database add_recipe method
             mock_search.return_value = [recipe1, recipe2]
-            
+
             # Only recipe2 should be returned as it doesn't have flour
-            response = client.get("/recipes/search?name=recipe&exclude_ingredients=flour")
+            response = client.get(
+                "/recipes/search?name=recipe&exclude_ingredients=flour"
+            )
             assert response.status_code == 200
             data = response.json()
             assert len(data) == 1
             assert data[0]["name"] == "Recipe without flour"
-            
+
             # Verify add_recipe was called
             mock_add_recipe.assert_called()
 
@@ -247,7 +265,7 @@ def test_get_random_favorite_recipe(client, sample_recipe):
         with patch("src.api.app.random.choice") as mock_choice:
             mock_get_favorites.return_value = [sample_recipe]
             mock_choice.return_value = sample_recipe
-            
+
             response = client.get("/recipes/random_from_favorites?user_id=test_user")
             assert response.status_code == 200
             mock_get_favorites.assert_called_once_with("test_user")
@@ -258,7 +276,7 @@ def test_get_random_favorite_recipe_empty(client):
     """Test the error case for get_random_favorite_recipe when no favorites exist."""
     with patch("src.api.app.db.get_favorite_recipes") as mock_get_favorites:
         mock_get_favorites.return_value = []
-        
+
         response = client.get("/recipes/random_from_favorites?user_id=test_user")
         assert response.status_code == 200
         assert response.json() == {"error": "No favorite recipes found."}
@@ -270,7 +288,7 @@ def test_get_random_custom_recipe(client, sample_recipe):
         with patch("src.api.app.random.choice") as mock_choice:
             mock_get_custom.return_value = [sample_recipe]
             mock_choice.return_value = sample_recipe
-            
+
             response = client.get("/recipes/random_from_custom?user_id=test_user")
             assert response.status_code == 200
             mock_get_custom.assert_called_once_with("test_user")
@@ -281,7 +299,7 @@ def test_get_random_custom_recipe_empty(client):
     """Test the error case for get_random_custom_recipe when no custom recipes exist."""
     with patch("src.api.app.db.get_custom_recipes") as mock_get_custom:
         mock_get_custom.return_value = []
-        
+
         response = client.get("/recipes/random_from_custom?user_id=test_user")
         assert response.status_code == 200
         assert response.json() == {"error": "No custom recipes found."}
