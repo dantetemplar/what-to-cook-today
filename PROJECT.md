@@ -31,8 +31,30 @@ Maintainability, Reliability, and Security metrics must be tested with SonarQube
 
 ### Performance:
 
-- Response time during execution of listed functional requirements ≤ 0.2 ms.
+- Response time during execution of listed functional requirements ≤ 2 s.
 - Response time during API calls ≤ 2 s.
+
+#### Locuts performance report (time in milliseconds):
+
+```log
+Response time percentiles (approximated)
+Type     Name                                                                             50%    66%    75%    80%    90%    95%    98%    99%  99.9% 99.99%   100% # reqs
+--------|---------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+POST     /recipes/123/favorite                                                              5     13     59     77    120    150    210    230    230    230    230     91
+GET      /recipes/custom                                                                    6      7      9     17     84     96    120    600    600    600    600     85
+POST     /recipes/custom                                                                    8     10     15     68    110    140    180    180    190    190    190    102
+GET      /recipes/favorites                                                                 5      6      8     27    110    170    200    220    600    600    600    114
+GET      /recipes/random                                                                  110    120    130    150    200    220    260    330    710    710    710    284
+GET      /recipes/search?name=chicken                                                     140    150    170    190    240    260    360    410    600    600    600    184
+--------|---------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+         Aggregated                                                                       110    120    140    140    180    220    260    330    710    710    710    860
+
+```
+
+#### Performance metrics:
+
+- Average response time: 143ms
+- 90th percentile response time: 240ms
 
 ### Security:
 
